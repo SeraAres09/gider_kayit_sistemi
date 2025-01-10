@@ -1,12 +1,10 @@
-import NextAuth, { Session, User } from "next-auth"
+import NextAuth, { NextAuthOptions, Session, User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcrypt"
-import { PrismaClient } from "@prisma/client"
+import { readFromUsersSheet } from "../../../utils/googleSheets"
 
-const prisma = new PrismaClient()
-
-export default NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -19,11 +17,8 @@ export default NextAuth({
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
+        const users = await readFromUsersSheet()
+        const user = users.find(u => u.email === credentials.email)
 
         if (!user) {
           return null
@@ -61,5 +56,7 @@ export default NextAuth({
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-})
+}
+
+export default NextAuth(authOptions)
 
