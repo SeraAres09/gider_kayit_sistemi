@@ -45,11 +45,34 @@ export async function readFromUsersSheet() {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      range: 'users!A:C',
+      range: 'users!A:D', // Sütun aralığını güncelleyin
     });
-    return response.data.values || [];
+    const [headers, ...rows] = response.data.values || [];
+    return rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      email: row[2],
+      // Şifreyi burada döndürmemeyi tercih edebilirsiniz
+    }));
   } catch (error) {
     console.error('Error reading from users sheet:', error);
+    throw error;
+  }
+}
+
+export async function appendToUsersSheet(user: { name: string, email: string, password: string }) {
+  try {
+    const response = await sheets.spreadsheets.values.append({
+      spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+      range: 'users!A:D',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[Date.now().toString(), user.name, user.email, user.password]],
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error appending to users sheet:', error);
     throw error;
   }
 }
