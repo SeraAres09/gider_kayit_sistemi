@@ -1,6 +1,6 @@
-import NextAuth, { Session } from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
+import NextAuth, { Session, User } from "next-auth"
 import { JWT } from "next-auth/jwt"
+import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcrypt"
 import { PrismaClient } from "@prisma/client"
 
@@ -48,16 +48,16 @@ export default NextAuth({
   },
   callbacks: {
     async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
+      if (session.user) {
+        (session.user as User & { id: string }).id = token.sub as string;
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user?: User }): Promise<JWT> {
       if (user) {
-        token.id = user.id
+        token.sub = user.id;
       }
-      return token
+      return token;
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
