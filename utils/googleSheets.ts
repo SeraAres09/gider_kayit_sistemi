@@ -11,7 +11,6 @@ const auth = new JWT({
 
 const sheets = google.sheets({ version: 'v4', auth });
 
-// Expenses sayfası için fonksiyonlar
 export async function appendToExpensesSheet(values: any[][]) {
   try {
     const response = await sheets.spreadsheets.values.append({
@@ -38,24 +37,6 @@ export async function readFromExpensesSheet() {
     return response.data.values || [];
   } catch (error) {
     console.error('Error reading from expenses sheet:', error);
-    throw error;
-  }
-}
-
-// Users sayfası için fonksiyonlar
-export async function appendToUsersSheet(values: any[][]) {
-  try {
-    const response = await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      range: 'users!A:C',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error appending to users sheet:', error);
     throw error;
   }
 }
