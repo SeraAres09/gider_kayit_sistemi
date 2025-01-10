@@ -43,14 +43,18 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.isAdmin = user.isAdmin
+        token.sub = user.id
       }
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).isAdmin = token.isAdmin
+      if (token && session?.user) {
+        (session.user as User & { id: string; isAdmin: boolean }).id = token.sub;
+        (session.user as User & { id: string; isAdmin: boolean }).isAdmin = token.isAdmin as boolean;
+      } else {
+        console.warn("Session user is not defined");
       }
-      return session
+      return session;
     }
   },
   pages: {
