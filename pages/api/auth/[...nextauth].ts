@@ -1,5 +1,6 @@
-import NextAuth from "next-auth"
+import NextAuth, { Session } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { JWT } from "next-auth/jwt"
 import { compare } from "bcrypt"
 import { PrismaClient } from "@prisma/client"
 
@@ -46,9 +47,9 @@ export default NextAuth({
     signIn: '/login',
   },
   callbacks: {
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
+    async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
       }
       return session;
     },
