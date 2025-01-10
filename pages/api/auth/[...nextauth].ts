@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions, Session, User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcrypt"
-import { readFromUsersSheet } from "../../../utils/googleSheets"
+import { readFromUsersSheet, ensureAdminUser } from "../../../utils/googleSheets"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -17,6 +17,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        await ensureAdminUser();
         const users = await readFromUsersSheet()
         const user = users.find(u => u.email === credentials.email)
 
@@ -34,6 +35,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          isAdmin: user.isAdmin
         }
       }
     })
@@ -44,13 +46,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
       if (session && session.user && token) {
-        (session.user as User & { id: string }).id = token.sub as string;
+        (session.user as User & { id: string, isAdmin: boolean }).id = token.sub as string;
+        (session.user as User & { id: string, isAdmin: boolean }).isAdmin = token.isAdmin as boolean;
       }
       return session;
     },
-    async jwt({ token, user }: { token: JWT; user?: User }): Promise<JWT> {
+    async jwt({ token, user }: { token: JWT; user?: User & { isAdmin?: boolean } }): Promise<JWT> {
       if (user) {
         token.sub = user.id;
+        token.isAdmin = user.isAdmin;
       }
       return token;
     }
