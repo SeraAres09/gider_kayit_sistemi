@@ -1,31 +1,74 @@
+import { useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import Link from 'next/link'
 
 export default function Login() {
-  const { data: session, status } = useSession()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const router = useRouter()
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/dashboard')
-    }
-  }, [status, router])
+  const { data: session, status } = useSession()
 
   if (status === 'loading') {
     return <div>Yükleniyor...</div>
+  }
+
+  if (status === 'authenticated') {
+    router.push('/dashboard')
+    return null
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const result = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    })
+
+    if (result?.error) {
+      setError('Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.')
+    } else {
+      router.push('/dashboard')
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold mb-4">Giriş Yap</h1>
-        <button
-          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Google ile Giriş Yap
-        </button>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block mb-1">E-posta</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block mb-1">Şifre</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+              required
+            />
+          </div>
+          <button type="submit" className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Giriş Yap
+          </button>
+        </form>
+        <p className="mt-4 text-center">
+          Hesabınız yok mu? <Link href="/signup" className="text-blue-500 hover:underline">Kayıt Ol</Link>
+        </p>
       </div>
     </div>
   )
