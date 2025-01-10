@@ -46,7 +46,7 @@ export async function readFromUsersSheet() {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      range: 'users!A:D',
+      range: 'users!A:E', // Updated to include the isAdmin column
     });
     const values = response.data.values || [];
     if (values.length <= 1) {
@@ -84,17 +84,36 @@ export async function appendToUsersSheet(user: { name: string, email: string, pa
   }
 }
 
-// Add the admin user if it doesn't exist
-export async function ensureAdminUser() {
+export async function createAdminUser() {
+  const adminUser = {
+    name: 'Admin',
+    email: 'seraares@gmail.com',
+    password: '19032003Bjk*',
+    isAdmin: true
+  };
+
   const users = await readFromUsersSheet();
-  const adminUser = users.find(user => user.email === 'seraares202009@gmail.com');
-  if (!adminUser) {
-    await appendToUsersSheet({
-      name: 'Admin',
-      email: 'seraares202009@gmail.com',
-      password: '19032003Bjk*',
-      isAdmin: true
-    });
+  const existingAdmin = users.find(user => user.email === adminUser.email);
+
+  if (!existingAdmin) {
+    await appendToUsersSheet(adminUser);
+    console.log('Admin user created successfully');
+  } else {
+    console.log('Admin user already exists');
   }
 }
+
+// Add the admin user if it doesn't exist
+// export async function ensureAdminUser() {
+//   const users = await readFromUsersSheet();
+//   const adminUser = users.find(user => user.email === 'seraares202009@gmail.com');
+//   if (!adminUser) {
+//     await appendToUsersSheet({
+//       name: 'Admin',
+//       email: 'seraares202009@gmail.com',
+//       password: '19032003Bjk*',
+//       isAdmin: true
+//     });
+//   }
+// }
 
