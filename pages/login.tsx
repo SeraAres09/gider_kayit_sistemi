@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -10,13 +10,18 @@ export default function Login() {
   const router = useRouter()
   const { data: session, status } = useSession()
 
+  useEffect(() => {
+    if (status === 'authenticated') {
+      if (session?.user?.isAdmin) {
+        router.push('/add-user')
+      } else {
+        router.push('/dashboard')
+      }
+    }
+  }, [status, session, router])
+
   if (status === 'loading') {
     return <div>Yükleniyor...</div>
-  }
-
-  if (status === 'authenticated') {
-    router.push('/dashboard')
-    return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,8 +34,6 @@ export default function Login() {
 
     if (result?.error) {
       setError('Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.')
-    } else {
-      router.push('/dashboard')
     }
   }
 
@@ -66,9 +69,6 @@ export default function Login() {
             Giriş Yap
           </button>
         </form>
-        <p className="mt-4 text-center">
-          Hesabınız yok mu? <Link href="/signup" className="text-blue-500 hover:underline">Kayıt Ol</Link>
-        </p>
       </div>
     </div>
   )
