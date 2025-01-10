@@ -12,6 +12,10 @@ export default NextAuth({
     signIn: '/login',
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Ensure the callback URL is correctly set
+      return baseUrl
+    },
     async session({ session, token, user }) {
       return session
     },
