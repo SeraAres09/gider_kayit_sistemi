@@ -4,18 +4,19 @@ import { JWT } from 'google-auth-library';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 const auth = new JWT({
-  email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+  email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL!,
   key: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   scopes: SCOPES,
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
 
-export async function appendToSheet(values: any[][]) {
+// Expenses sayfası için fonksiyonlar
+export async function appendToExpensesSheet(values: any[][]) {
   try {
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      range: 'Giderler!A:F',
+      range: 'expenses!A:F',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values,
@@ -23,20 +24,51 @@ export async function appendToSheet(values: any[][]) {
     });
     return response.data;
   } catch (error) {
-    console.error('Error appending to sheet:', error);
+    console.error('Error appending to expenses sheet:', error);
     throw error;
   }
 }
 
-export async function readFromSheet() {
+export async function readFromExpensesSheet() {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      range: 'Giderler!A:F',
+      range: 'expenses!A:F',
     });
     return response.data.values || [];
   } catch (error) {
-    console.error('Error reading from sheet:', error);
+    console.error('Error reading from expenses sheet:', error);
+    throw error;
+  }
+}
+
+// Users sayfası için fonksiyonlar
+export async function appendToUsersSheet(values: any[][]) {
+  try {
+    const response = await sheets.spreadsheets.values.append({
+      spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+      range: 'users!A:C',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error appending to users sheet:', error);
+    throw error;
+  }
+}
+
+export async function readFromUsersSheet() {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+      range: 'users!A:C',
+    });
+    return response.data.values || [];
+  } catch (error) {
+    console.error('Error reading from users sheet:', error);
     throw error;
   }
 }
