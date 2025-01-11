@@ -1,21 +1,42 @@
 import { useState } from 'react'
 
+interface FormData {
+  tarih: string
+  harcamaYeri: string
+  harcamaTuru: string
+  tutar: string
+  harcamayiYapan: string
+  not: string
+}
+
+const initialFormData: FormData = {
+  tarih: '',
+  harcamaYeri: '',
+  harcamaTuru: '',
+  tutar: '',
+  harcamayiYapan: '',
+  not: '',
+}
+
 export default function ExpenseForm() {
-  const [formData, setFormData] = useState({
-    tarih: '',
-    harcamaYeri: '',
-    harcamaTuru: '',
-    tutar: '',
-    harcamayiYapan: '',
-    not: '',
-  })
+  const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+    // Clear messages when user starts typing
+    setError(null)
+    setSuccess(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
+    setSuccess(null)
+
     try {
       const response = await fetch('/api/addExpense', {
         method: 'POST',
@@ -24,27 +45,34 @@ export default function ExpenseForm() {
         },
         body: JSON.stringify(formData),
       })
-      if (response.ok) {
-        alert('Gider başarıyla eklendi!')
-        setFormData({
-          tarih: '',
-          harcamaYeri: '',
-          harcamaTuru: '',
-          tutar: '',
-          harcamayiYapan: '',
-          not: '',
-        })
-      } else {
-        throw new Error('Gider eklenirken bir hata oluştu')
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gider eklenirken bir hata oluştu')
       }
+
+      setSuccess('Gider başarıyla eklendi!')
+      setFormData(initialFormData)
     } catch (error) {
-      console.error('Error:', error)
-      alert('Gider eklenirken bir hata oluştu')
+      setError(error instanceof Error ? error.message : 'Gider eklenirken bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded">
+          {success}
+        </div>
+      )}
       <div>
         <label htmlFor="tarih" className="block mb-1">Tarih</label>
         <input
@@ -121,8 +149,12 @@ export default function ExpenseForm() {
           rows={3}
         ></textarea>
       </div>
-      <button type="submit" className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-        Gider Ekle
+      <button 
+        type="submit" 
+        className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Gider Ekleniyor...' : 'Gider Ekle'}
       </button>
     </form>
   )
