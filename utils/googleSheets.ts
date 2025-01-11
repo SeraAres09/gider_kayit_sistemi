@@ -4,14 +4,7 @@ import { JWT } from 'google-auth-library';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 function formatPrivateKey(key: string): string {
-  // Remove any extra whitespace and ensure proper line breaks
-  const formattedKey = key
-    .replace(/\\n/g, '\n')
-    .replace(/\s+/g, '\n')
-    .replace(/^-----(BEGIN|END) PRIVATE KEY-----\s*/, '')
-    .replace(/\s*-----(BEGIN|END) PRIVATE KEY-----$/, '');
-
-  return `-----BEGIN PRIVATE KEY-----\n${formattedKey}\n-----END PRIVATE KEY-----`;
+  return key.replace(/\\n/g, '\n').trim();
 }
 
 const getAuth = () => {
@@ -25,9 +18,10 @@ const getAuth = () => {
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
     if (!spreadsheetId) throw new Error('Google Sheets spreadsheet ID is missing');
 
-    // Format the private key properly
-    const formattedKey = formatPrivateKey(privateKey);
+    console.log('Auth Params:', { clientEmail, spreadsheetId, privateKeyLength: privateKey.length });
 
+    const formattedKey = formatPrivateKey(privateKey);
+    
     return new JWT({
       email: clientEmail,
       key: formattedKey,
@@ -53,6 +47,8 @@ export async function appendToExpensesSheet(values: any[][]) {
       throw new Error('Spreadsheet ID is not configured');
     }
 
+    console.log('Appending to sheet:', { spreadsheetId, values });
+
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
       range: 'expenses!A:F',
@@ -62,12 +58,10 @@ export async function appendToExpensesSheet(values: any[][]) {
       },
     });
     
+    console.log('Append response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error appending to expenses sheet:', error);
-    if (error instanceof Error && error.message.includes('DECODER routines')) {
-      throw new Error('Google Sheets authentication failed. Please check your credentials.');
-    }
     throw error;
   }
 }
