@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 
 interface Expense {
   tarih: string;
@@ -42,19 +44,31 @@ export default function ExpenseList() {
       const response = await fetch(`/api/getExpenses?${queryParams}`);
       if (response.ok) {
         const data = await response.json();
-        setExpenses(data.slice(1)); // İlk satır başlık olduğu için atlıyoruz
-        setLoading(false);
+        if (data.success) {
+          setExpenses(data.data.slice(1)); // İlk satır başlık olduğu için atlıyoruz
+        } else {
+          throw new Error(data.message || 'Veri alınamadı');
+        }
       } else {
         throw new Error('Giderler alınırken bir hata oluştu');
       }
     } catch (error) {
       console.error('Error:', error);
+    } finally {
       setLoading(false);
     }
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFilterOptions({ ...filterOptions, [e.target.name]: e.target.value })
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), 'dd.MM.yyyy')
+    } catch (error) {
+      return dateString
+    }
   }
 
   const uniqueHarcamaYerleri = Array.from(new Set(expenses.map(expense => expense.harcamaYeri)))
@@ -151,7 +165,7 @@ export default function ExpenseList() {
           <tbody>
             {expenses.map((expense, index) => (
               <tr key={index}>
-                <td className="px-4 py-2 border">{format(new Date(expense.tarih), 'dd.MM.yyyy')}</td>
+                <td className="px-4 py-2 border">{formatDate(expense.tarih)}</td>
                 <td className="px-4 py-2 border">{expense.harcamaYeri}</td>
                 <td className="px-4 py-2 border">{expense.harcamaTuru}</td>
                 <td className="px-4 py-2 border">{expense.tutar}</td>
