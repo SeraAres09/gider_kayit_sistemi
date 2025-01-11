@@ -28,7 +28,6 @@ export default function ExpenseForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
-    // Clear messages when user starts typing
     setError(null)
     setSuccess(null)
   }
@@ -58,6 +57,7 @@ export default function ExpenseForm() {
       setFormData(initialFormData)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Gider eklenirken bir hata oluştu')
+      console.error('Form submission error:', error)
     } finally {
       setIsSubmitting(false)
     }
