@@ -2,31 +2,31 @@ import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 
 interface Expense {
-  date: string;
-  place: string;
-  type: string;
-  amount: string;
-  spender: string;
-  note: string;
+  tarih: string;
+  harcamaYeri: string;
+  harcamaTuru: string;
+  tutar: string;
+  harcamayiYapan: string;
+  not: string;
 }
 
 interface FilterOptions {
-  startDate: string;
-  endDate: string;
-  place: string;
-  type: string;
-  spender: string;
+  baslangicTarihi: string;
+  bitisTarihi: string;
+  harcamaYeri: string;
+  harcamaTuru: string;
+  harcamayiYapan: string;
 }
 
 export default function ExpenseList() {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    startDate: '',
-    endDate: '',
-    place: '',
-    type: '',
-    spender: '',
+    baslangicTarihi: '',
+    bitisTarihi: '',
+    harcamaYeri: '',
+    harcamaTuru: '',
+    harcamayiYapan: '',
   })
 
   useEffect(() => {
@@ -57,9 +57,9 @@ export default function ExpenseList() {
     setFilterOptions({ ...filterOptions, [e.target.name]: e.target.value })
   }
 
-  const uniquePlaces = Array.from(new Set(expenses.map(expense => expense.place)))
-  const uniqueTypes = Array.from(new Set(expenses.map(expense => expense.type)))
-  const uniqueSpenders = Array.from(new Set(expenses.map(expense => expense.spender)))
+  const uniqueHarcamaYerleri = Array.from(new Set(expenses.map(expense => expense.harcamaYeri)))
+  const uniqueHarcamaTurleri = Array.from(new Set(expenses.map(expense => expense.harcamaTuru)))
+  const uniqueHarcamayiYapanlar = Array.from(new Set(expenses.map(expense => expense.harcamayiYapan)))
 
   if (loading) {
     return <div>Yükleniyor...</div>
@@ -69,69 +69,69 @@ export default function ExpenseList() {
     <div>
       <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
-          <label htmlFor="startDate" className="block mb-1">Başlangıç Tarihi</label>
+          <label htmlFor="baslangicTarihi" className="block mb-1">Başlangıç Tarihi</label>
           <input
             type="date"
-            id="startDate"
-            name="startDate"
-            value={filterOptions.startDate}
+            id="baslangicTarihi"
+            name="baslangicTarihi"
+            value={filterOptions.baslangicTarihi}
             onChange={handleFilterChange}
             className="w-full px-3 py-2 border rounded"
           />
         </div>
         <div>
-          <label htmlFor="endDate" className="block mb-1">Bitiş Tarihi</label>
+          <label htmlFor="bitisTarihi" className="block mb-1">Bitiş Tarihi</label>
           <input
             type="date"
-            id="endDate"
-            name="endDate"
-            value={filterOptions.endDate}
+            id="bitisTarihi"
+            name="bitisTarihi"
+            value={filterOptions.bitisTarihi}
             onChange={handleFilterChange}
             className="w-full px-3 py-2 border rounded"
           />
         </div>
         <div>
-          <label htmlFor="place" className="block mb-1">Harcama Yeri</label>
+          <label htmlFor="harcamaYeri" className="block mb-1">Harcama Yeri</label>
           <select
-            id="place"
-            name="place"
-            value={filterOptions.place}
+            id="harcamaYeri"
+            name="harcamaYeri"
+            value={filterOptions.harcamaYeri}
             onChange={handleFilterChange}
             className="w-full px-3 py-2 border rounded"
           >
             <option value="">Tümü</option>
-            {uniquePlaces.map(place => (
-              <option key={place} value={place}>{place}</option>
+            {uniqueHarcamaYerleri.map(yer => (
+              <option key={yer} value={yer}>{yer}</option>
             ))}
           </select>
         </div>
         <div>
-          <label htmlFor="type" className="block mb-1">Harcama Türü</label>
+          <label htmlFor="harcamaTuru" className="block mb-1">Harcama Türü</label>
           <select
-            id="type"
-            name="type"
-            value={filterOptions.type}
+            id="harcamaTuru"
+            name="harcamaTuru"
+            value={filterOptions.harcamaTuru}
             onChange={handleFilterChange}
             className="w-full px-3 py-2 border rounded"
           >
             <option value="">Tümü</option>
-            {uniqueTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
+            {uniqueHarcamaTurleri.map(tur => (
+              <option key={tur} value={tur}>{tur}</option>
             ))}
           </select>
         </div>
         <div>
-          <label htmlFor="spender" className="block mb-1">Harcamayı Yapan</label>
+          <label htmlFor="harcamayiYapan" className="block mb-1">Harcamayı Yapan</label>
           <select
-            id="spender"
-            name="spender"
-            value={filterOptions.spender}
+            id="harcamayiYapan"
+            name="harcamayiYapan"
+            value={filterOptions.harcamayiYapan}
             onChange={handleFilterChange}
             className="w-full px-3 py-2 border rounded"
           >
             <option value="">Tümü</option>
-            {uniqueSpenders.map(spender => (
-              <option key={spender} value={spender}>{spender}</option>
+            {uniqueHarcamayiYapanlar.map(yapan => (
+              <option key={yapan} value={yapan}>{yapan}</option>
             ))}
           </select>
         </div>
@@ -151,12 +151,12 @@ export default function ExpenseList() {
           <tbody>
             {expenses.map((expense, index) => (
               <tr key={index}>
-                <td className="px-4 py-2 border">{format(new Date(expense.date), 'dd.MM.yyyy')}</td>
-                <td className="px-4 py-2 border">{expense.place}</td>
-                <td className="px-4 py-2 border">{expense.type}</td>
-                <td className="px-4 py-2 border">{expense.amount}</td>
-                <td className="px-4 py-2 border">{expense.spender}</td>
-                <td className="px-4 py-2 border">{expense.note}</td>
+                <td className="px-4 py-2 border">{format(new Date(expense.tarih), 'dd.MM.yyyy')}</td>
+                <td className="px-4 py-2 border">{expense.harcamaYeri}</td>
+                <td className="px-4 py-2 border">{expense.harcamaTuru}</td>
+                <td className="px-4 py-2 border">{expense.tutar}</td>
+                <td className="px-4 py-2 border">{expense.harcamayiYapan}</td>
+                <td className="px-4 py-2 border">{expense.not}</td>
               </tr>
             ))}
           </tbody>
