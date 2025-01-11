@@ -23,8 +23,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const [tarih, harcamaYeri, harcamaTuru, , harcamayiYapan] = row
       const { baslangicTarihi, bitisTarihi, harcamaYeri: filterHarcamaYeri, harcamaTuru: filterHarcamaTuru, harcamayiYapan: filterHarcamayiYapan } = req.query
 
-      if (baslangicTarihi && new Date(tarih) < new Date(baslangicTarihi as string)) return false
-      if (bitisTarihi && new Date(tarih) > new Date(bitisTarihi as string)) return false
+      try {
+        if (baslangicTarihi && new Date(tarih).getTime() < new Date(baslangicTarihi as string).getTime()) return false
+        if (bitisTarihi && new Date(tarih).getTime() > new Date(bitisTarihi as string).getTime()) return false
+      } catch (error) {
+        console.error('Date comparison error:', error)
+        return false
+      }
+
       if (filterHarcamaYeri && harcamaYeri !== filterHarcamaYeri) return false
       if (filterHarcamaTuru && harcamaTuru !== filterHarcamaTuru) return false
       if (filterHarcamayiYapan && harcamayiYapan !== filterHarcamayiYapan) return false
