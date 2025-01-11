@@ -3,7 +3,17 @@ import { JWT } from 'google-auth-library';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-// Initialize auth with better error handling
+function formatPrivateKey(key: string): string {
+  // Remove any extra whitespace and ensure proper line breaks
+  const formattedKey = key
+    .replace(/\\n/g, '\n')
+    .replace(/\s+/g, '\n')
+    .replace(/^-----(BEGIN|END) PRIVATE KEY-----\s*/, '')
+    .replace(/\s*-----(BEGIN|END) PRIVATE KEY-----$/, '');
+
+  return `-----BEGIN PRIVATE KEY-----\n${formattedKey}\n-----END PRIVATE KEY-----`;
+}
+
 const getAuth = () => {
   try {
     const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
@@ -15,9 +25,12 @@ const getAuth = () => {
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
     if (!spreadsheetId) throw new Error('Google Sheets spreadsheet ID is missing');
 
+    // Format the private key properly
+    const formattedKey = formatPrivateKey(privateKey);
+
     return new JWT({
       email: clientEmail,
-      key: privateKey.replace(/\\n/g, '\n'),
+      key: formattedKey,
       scopes: SCOPES,
     });
   } catch (error) {
@@ -36,6 +49,10 @@ export async function appendToExpensesSheet(values: any[][]) {
     const sheets = getSheets();
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
     
+    if (!spreadsheetId) {
+      throw new Error('Spreadsheet ID is not configured');
+    }
+
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
       range: 'expenses!A:F',
@@ -48,7 +65,10 @@ export async function appendToExpensesSheet(values: any[][]) {
     return response.data;
   } catch (error) {
     console.error('Error appending to expenses sheet:', error);
-    throw new Error('Google Sheets API error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    if (error instanceof Error && error.message.includes('DECODER routines')) {
+      throw new Error('Google Sheets authentication failed. Please check your credentials.');
+    }
+    throw error;
   }
 }
 
@@ -57,6 +77,10 @@ export async function readFromExpensesSheet() {
     const sheets = getSheets();
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
     
+    if (!spreadsheetId) {
+      throw new Error('Spreadsheet ID is not configured');
+    }
+
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: 'expenses!A:F',
@@ -65,7 +89,10 @@ export async function readFromExpensesSheet() {
     return response.data.values || [];
   } catch (error) {
     console.error('Error reading from expenses sheet:', error);
-    throw new Error('Google Sheets API error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    if (error instanceof Error && error.message.includes('DECODER routines')) {
+      throw new Error('Google Sheets authentication failed. Please check your credentials.');
+    }
+    throw error;
   }
 }
 
